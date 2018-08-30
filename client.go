@@ -4,14 +4,12 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"net/url"
 	"runtime"
-	"time"
-
-	"io/ioutil"
-
 	"strconv"
+	"time"
 
 	"github.com/pkg/errors"
 )
@@ -59,6 +57,7 @@ func (c *Client) NewRequest(method, resource string, payload interface{}) (*http
 
 	req.Header.Add("Accept", mediaType)
 	req.Header.Add("User-Agent", c.userAgent)
+	req.Header.Add("X-Requested-By", "bilcus/livy-api-go-client")
 
 	return req, nil
 
