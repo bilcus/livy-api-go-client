@@ -83,6 +83,8 @@ func (c *Client) Do(req *http.Request, into interface{}) error {
 		if err := json.Unmarshal(body, into); err != nil {
 			return errors.Wrap(err, "decoding response body")
 		}
+
+		return nil
 	default:
 		return errors.Errorf("server returned status: %s: %s", resp.Status, extractErrorMessage(body))
 	}
