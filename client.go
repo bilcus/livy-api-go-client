@@ -8,15 +8,14 @@ import (
 	"net/http"
 	"net/url"
 	"runtime"
-	"strconv"
 	"time"
 
 	"github.com/pkg/errors"
 )
 
 const (
-	apiVersion     = "0.5.0-incubating"
-	libraryVersion = "0.1.0"
+	apiVersion     = "0.6.0-incubating"
+	libraryVersion = "0.2.0"
 	mediaType      = "application/json"
 )
 
@@ -68,27 +67,23 @@ func (c *Client) Do(req *http.Request, into interface{}) error {
 	if err != nil {
 		return err
 	}
-
-	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
-		body, _ := ioutil.ReadAll(resp.Body)
-		errorMessage, _ := strconv.Unquote(string(body))
-		return errors.Errorf("server returned status: %s: %s", resp.Status, errorMessage)
-	}
-
-	if into == nil {
-		return nil
-	}
+	defer resp.Body.Close()
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return errors.Wrap(err, "reading response body")
 	}
 
-	//fmt.Println(string(body))
+	switch resp.StatusCode {
+	case http.StatusOK, http.StatusCreated, http.StatusAccepted:
+		if into == nil {
+			return nil
+		}
 
-	if err := json.Unmarshal(body, into); err != nil {
-		return errors.Wrap(err, "decoding response body")
+		if err := json.Unmarshal(body, into); err != nil {
+			return errors.Wrap(err, "decoding response body")
+		}
+	default:
+		return errors.Errorf("server returned status: %s: %s", resp.Status, extractErrorMessage(body))
 	}
-
-	return nil
 }
